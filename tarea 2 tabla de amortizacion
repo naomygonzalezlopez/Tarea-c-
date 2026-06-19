@@ -1,0 +1,57 @@
+using System;
+using Spectre.Console;
+
+AnsiConsole.MarkupLine("[yellow]=== CONTROL DE AMORTIZACIÓN ===[/]\n");
+
+decimal monto = AnsiConsole.Ask<decimal>("Monto del préstamo:");
+decimal tasaAnual = AnsiConsole.Ask<decimal>("Tasa de interés anual (%):");
+int plazoMeses = AnsiConsole.Ask<int>("Plazo del préstamo (en meses):");
+
+decimal tasaMensual = (tasaAnual / 12) / 100;
+
+double basePotencia = (double)(1 + tasaMensual);
+double potencia = Math.Pow(basePotencia, plazoMeses);
+
+decimal cuotaFija = monto * (tasaMensual * (decimal)potencia) / ((decimal)potencia - 1);
+cuotaFija = Math.Round(cuotaFija, 2);
+
+var tabla = new Table();
+tabla.Border(TableBorder.Rounded);
+
+tabla.AddColumn("[blue]No. Cuota[/]");
+tabla.AddColumn("[blue]Pago de Cuota[/]");
+tabla.AddColumn("[blue]Interés[/]");
+tabla.AddColumn("[blue]Abono Capital[/]");
+tabla.AddColumn("[blue]Saldo Pendiente[/]");
+
+decimal saldoPendiente = monto;
+
+for (int mes = 1; mes <= plazoMeses; mes++)
+{
+decimal interesDelMes = saldoPendiente * tasaMensual;
+interesDelMes = Math.Round(interesDelMes, 2);
+
+decimal abonoAlCapital = cuotaFija - interesDelMes;
+abonoAlCapital = Math.Round(abonoAlCapital, 2);
+
+saldoPendiente = saldoPendiente - abonoAlCapital;
+saldoPendiente = Math.Round(saldoPendiente, 2);
+
+if (mes == plazoMeses)
+{
+saldoPendiente = 0;
+}
+
+tabla.AddRow(
+mes.ToString(),
+"$" + cuotaFija.ToString("F2"),
+"$" + interesDelMes.ToString("F2"),
+"$" + abonoAlCapital.ToString("F2"),
+"$" + saldoPendiente.ToString("F2")
+);
+}
+
+AnsiConsole.WriteLine();
+AnsiConsole.Write(tabla);
+
+AnsiConsole.MarkupLine("\n[green]¡Tabla generada con éxito![/]");
